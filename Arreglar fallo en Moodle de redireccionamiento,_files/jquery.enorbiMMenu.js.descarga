@@ -1,0 +1,82 @@
+;(function ( $, window, document, undefined ) {
+    var cElements=[];
+    var defaults = {orientation: 'left',mode:'push',ulToLoad:null,titleUlToLoad:null,panelId:null,tFadeOut:200,tFadeIn:400};
+
+    // The actual plugin constructor
+    function enorbiMMenu( $element, options ) {this.$element = $element;this.options = $.extend( {}, defaults, options) ;this._defaults = defaults;this.init();cElements.push(this);}
+
+    enorbiMMenu.prototype.init = function () {
+        var base = this;
+        var h=$(window).height()-120;//coger del height del boton close para el de los lados...
+        if(this.options.panelId == null){this.options.panelId =$('<div id="enorbiMMenu" class="enorbiMMenu_Panel"><div class="wrapper"><div class="header"><a href="#" class="close">Close</a></div><div class="inner" style="height:'+h+'px"><div class="wrapper"></div></div></div></div>');$(this.options.panelId).hide().appendTo($('body'));}
+
+        this.load();
+        this.$body = $('body');
+        this.$body_position = this.$body.css('position');
+
+        this.options.panelId.hide().addClass('panel_' + this.options.orientation);//hide the panel and set orientation class for display
+        
+        this.options.panelId.css('left', '').css('right', '').css('top', '').css('bottom', '');//reset any defined a positions
+
+        //set a default top value for left and right orientations and set the starting position based on element width
+        if(this.options.orientation == 'left' || this.options.orientation == 'right') {var options = {};options['top'] = 0;options[this.options.orientation] = -this.options.panelId.width();this.options.panelId.css(options);}
+
+        //set a default left value for top and bottom orientations and set the starting position based on element height
+        if(this.options.orientation == 'top' || this.options.orientation == 'bottom') {var options = {};options['left'] = 0;options[this.options.orientation] = -this.options.panelId.height();this.options.panelId.css(options);}
+
+        //bind click event to trigger ajax load of html content and panel display to any elements that have the attribute rel="panel"
+        $(this.$element).on('click', function(e) {e.preventDefault();base.expand();});
+        //listen for a click on the close buttons for this panel
+        $('.close', this.options.panelId).click(function(e) {e.preventDefault();base.collapse();});
+    };
+
+    enorbiMMenu.prototype.load = function() {
+        var content=this.options.panelId.find("div.inner");var tl=this.options.titleUlToLoad.split(',');var ul=this.options.ulToLoad.split(',');
+        for(i=0;i<ul.length;i++){if(tl[i]){var firstSt="";if(i==0){firstSt=' style="margin-top:-25px"';}content.append("<h4"+firstSt+">"+tl[i]+"</h4><ul></ul>");}else{content.append("<div class=\"clear\"></div><ul></ul>");}
+            var arr=$(ul[i]).find("li");var contentUl=content.find("ul").last();
+            arr.each(function(index){contentUl.append($(this).clone());});
+        }
+    };
+    enorbiMMenu.prototype.expand = function() {collapseAll();
+        var base = this;//set the css properties to animatate
+        if(this.options.panelId.is(":visible")){base.collapse();return;}
+        var panel_options = {};
+        var body_options = {};
+        panel_options.visible = 'show';
+        panel_options[this.options.orientation] = 0;
+        body_options[this.options.orientation] = (this.options.orientation == 'top' || this.options.orientation == 'bottom') ? this.options.panelId.height() : this.options.panelId.width();
+        
+        //if the animation mode is set to push, we move the body in relation to the panel else the panel is overlayed on top of the body
+        if(this.options.mode == 'push'){this.$body.css('position', 'absolute').animate(body_options, base.options.tFadeIn);/*animate the body position in relation to the panel dimensions*/}
+
+        //animate the panel into view
+        this.options.panelId.animate(panel_options, base.options.tFadeIn, function() {$('.close', base.options.panelId).fadeIn(base.options.tFadeIn);/*show the panel's close button*/});
+    };
+    var collapseAll =function(){$(cElements).each(function(){this.collapse();});};
+    enorbiMMenu.prototype.collapse = function() {
+        var base = this;
+        $('.close', base.options.panelId).hide();//hide the close button for this panel
+        var panel_options = {};//set the css properties to animatate
+        var body_options = {};
+        panel_options.visible = 'hide';
+        panel_options[base.options.orientation] = -(this.options.panelId.width() + 40);
+        body_options[base.options.orientation] = 0;
+        
+        base.options.panelId.animate(panel_options,base.options.tFadeOut);
+        $('.close', base.options.panelId).fadeOut(base.options.tFadeOut);if(base.options.mode == 'push'){ base.$body.css('position', base.$body_position).animate(body_options,base.options.tFadeOut);}
+    };
+
+    $.fn['enorbiMMenu'] = function ( options ) {
+        return this.each(function () {
+            if (options && typeof(options) == 'object'){
+                if (!$.data(this, 'plugin_enorbiMMenu')) {
+                    $.data(this, 'plugin_enorbiMMenu', new enorbiMMenu( this, options ));
+                }
+            }else{
+                if(options=='expand'){$.data(this,'plugin_enorbiMMenu').expand();}
+                else if(options=='collapse'){$.data(this,'plugin_enorbiMMenu').collapse();}
+            }
+        });
+    }
+
+})(jQuery, window);

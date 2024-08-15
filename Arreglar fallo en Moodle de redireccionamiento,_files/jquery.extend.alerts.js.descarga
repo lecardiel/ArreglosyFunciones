@@ -1,0 +1,31 @@
+﻿$(function(){
+    $.alert=function(message,title,closeFunction){
+       $("<div></div>").dialog({
+            buttons:{"Aceptar":function(){$(this).dialog("close");}},
+            close:function(event,ui){$(this).remove();if(closeFunction){closeFunction(event,ui);}},
+            resizable:false,modal:true,
+            title:title
+        }).text(message);
+    };
+    $.confirm=function(message,title,aceptFunction,closeFunction){
+       $("<div></div>").dialog({
+            buttons:{"Aceptar":function(){$(this).remove();if(aceptFunction){aceptFunction(event);}},"Cancelar":function(){$(this).dialog("close");}},
+            close:function(event,ui){$(this).remove();if(closeFunction){closeFunction(event,ui);}},
+            resizable:false,modal:true,
+            title:title
+        }).text(message);
+    };
+    var cBolas=0,mBolas=30,sw_loaded=false,tCreate=150,pIcon="<img class=\"orbitar1\" src=\"/Content/themes/Enorbita/images/logo/iidd\">",tMov=0;//0-aleatorio,1-circulo,2serpiente;
+    $.loading=function(sw_on,tmovimi,nbolas,tcreaBo){
+        if(nbolas!=undefined){mBolas=nbolas;};if(tcreaBo!=undefined){tCreate=tcreaBo;};if(tmovimi!=undefined){tMov=tmovimi;};if(tMov==0){tMov=Math.floor(Math.random()*2)+1;}
+        if(sw_on==false){var d=$(".loadingIcons");d.prev().remove();d.remove();sw_loaded=false;return;}
+        cBolas=0;if(sw_loaded){}
+        else{setTimeout(function(){$.loading(false);},15000);
+            var p1="icon_desarrollo_peq.png",p2="icon_empresa_peq.png",p3="icon_formacion_peq.png",p4="icon_asesoria_peq.png",p5="icon_marketing_peq.png";
+            var d1=$("<div class=\"loadingIcons\"><h5>loading</h5></div>");d1.css("left",$(window).width()/(tMov==0?4:2)).css("top",$(window).height()/2).appendTo($("body").append("<div class=\"ui-widget-overlay ui-front loading-overlay\"></div>"));
+            $.criconLoading(p5,d1);sw_loaded=true;
+            var t1=setInterval(function(){cBolas++;if(cBolas>=mBolas){clearInterval(t1);}else{$.criconLoading(cBolas%5==0?p5:cBolas%4==0?p4:cBolas%3==0?p3:cBolas%2==0?p2:p1,d1);}},100);
+       }
+    };
+    $.criconLoading=function(icon,d1){var i1=$(pIcon.replace("iidd",icon));if(tMov==1){i1.addClass("imgCircle")};d1.append(i1);};
+});
